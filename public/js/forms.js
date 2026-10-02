@@ -21,7 +21,12 @@
   var GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwsjJmX3psrr5Ccm3322vlN9TphllJ9TBTohEMuev38xc1LsZWvbxgJodVfeE5J63PtxQ/exec';
 
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  var ERROR_MSG = 'Sorry, your request didn\'t go through. Please try again or call us at (609) 830-8233.';
+  // Uses the phone number shown in the footer, so it always matches the panel
+  function errorMessage() {
+    var tel = document.querySelector('.footer a[href^="tel:"]');
+    var phone = tel ? tel.textContent.trim() : '';
+    return 'Sorry, your request didn\'t go through. Please try again' + (phone ? ' or call us at ' + phone + '.' : '.');
+  }
   var canSubmit = /^https?:$/.test(window.location.protocol);
 
   // Earliest selectable date = today (local)
@@ -162,7 +167,7 @@
 
       request
         .then(function () { done(); })
-        .catch(function () { showToast(ERROR_MSG, true); })
+        .catch(function () { showToast(errorMessage(), true); })
         .then(function () {
           if (button) { button.disabled = false; button.textContent = label; }
         });

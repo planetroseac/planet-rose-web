@@ -13,9 +13,9 @@ export default defineType({
   ],
   fields: [
     defineField({ name: 'phone', title: 'Phone (for the call button)', type: 'string', group: 'contact',
-      description: 'With country code, no spaces: +16098308233' }),
+      description: 'With country code, no spaces: +16408009030' }),
     defineField({ name: 'phoneDisplay', title: 'Phone (as shown on the site)', type: 'string', group: 'contact',
-      description: '(609) 830-8233' }),
+      description: '(640) 800-9030' }),
     defineField({ name: 'email', title: 'Email', type: 'string', group: 'contact' }),
 
     defineField({ name: 'instagramUrl', title: 'Instagram link', type: 'url', group: 'social' }),

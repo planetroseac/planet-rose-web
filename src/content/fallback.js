@@ -10,8 +10,8 @@ const photo = (file, alt, width, height) => ({ src: `/assets/photos/${file}`, al
 
 export default {
   settings: {
-    phone: '+16098308233',
-    phoneDisplay: '(609) 830-8233',
+    phone: '+16408009030',
+    phoneDisplay: '(640) 800-9030',
     email: 'planetrose.reservation@gmail.com',
     instagramUrl: 'https://www.instagram.com/planetroset_ac/',
     instagramHandle: '@planetroset_ac',
