@@ -1,0 +1,103 @@
+/* ==========================================================================
+   Planet Rose: animations
+   marquee · pulse-ring · breathe · grain · song-in · scroll-reveal · parallax
+   ========================================================================== */
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(.85); opacity: .9; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 var(--red-glow); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1);    opacity: .9; }
+  50%      { transform: scale(1.07); opacity: 1; }
+}
+
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-4%, 3%); }
+  50%  { transform: translate(3%, -5%); }
+  75%  { transform: translate(-2%, -2%); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes song-in {
+  from { opacity: 0; transform: translateY(8px); filter: blur(3px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Hero entrance, pure CSS so it never depends on JS */
+.hero__line,
+.hero__hook,
+.hero .mic-widget,
+.hero__panel > .kicker {
+  animation: hero-in .9s var(--ease) both;
+}
+.hero__panel > .kicker   { animation-delay: .05s; }
+.hero__line:nth-child(1) { animation-delay: .12s; }
+.hero__line:nth-child(2) { animation-delay: .22s; }
+.hero__line:nth-child(3) { animation-delay: .32s; }
+.hero__hook              { animation-delay: .44s; }
+.hero .mic-widget        { animation-delay: .56s; }
+
+/* Scroll reveal: JS adds .is-pending only to elements below the fold,
+   so nothing is ever hidden when JS is off or slow. */
+[data-reveal].is-pending {
+  opacity: 0;
+  transform: translateY(24px);
+}
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+  transition: opacity .8s var(--ease), transform .8s var(--ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.tape-photo[data-reveal].is-revealed { transform: rotate(var(--rot)); }
+.tape-photo[data-reveal].is-pending  { transform: translateY(24px) rotate(var(--rot)); }
+.tape-photo[data-reveal].is-revealed:hover { transform: rotate(0deg) translateY(-4px); }
+
+/* Parallax: JS writes --py; `translate` composes with existing transforms */
+.has-parallax [data-parallax] {
+  translate: 0 var(--py, 0px);
+  will-change: translate;
+}
+.has-parallax img[data-parallax] { scale: 1.14; }
+
+/* -------------------------------------------------------- REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+
+  .ticker__track { animation: none !important; }
+  .ticker { overflow-x: auto; }
+
+  .hero__panel::before { animation: none; }
+  .mic__glow { animation: none; }
+
+  [data-reveal].is-pending { opacity: 1; transform: none; }
+
+  /* parallax falls back to static */
+  [data-parallax] { translate: none !important; scale: none !important; }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "planet-rose-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@sanity/client": "^8.9.0",
+    "@sanity/image-url": "^2.1.1",
+    "astro": "^7.3.5"
+  },
+  "engines": { "node": ">=22" }
+}

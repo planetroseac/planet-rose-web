@@ -1,0 +1,751 @@
+---
+/**
+ * Planet Rose: home page.
+ * Same markup, CSS and JS as the approved design; editable content comes from
+ * getContent() (Sanity panel, or the built-in content until it's connected).
+ */
+import { getContent } from '../lib/content.js';
+
+const c = await getContent();
+const st = c.settings;
+
+const tel = `tel:${st.phone}`;
+const mailto = `mailto:${st.email}`;
+const canonical = new URL('/', Astro.site).href;
+
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One size'];
+const allSizes = [...new Set(c.products.flatMap((p) => p.sizes))]
+  .sort((a, b) => (SIZE_ORDER.indexOf(a) + 99) % 99 - (SIZE_ORDER.indexOf(b) + 99) % 99);
+const sizeLabel = (sizes) => (sizes.length > 1 ? `${sizes[0]} – ${sizes[sizes.length - 1]}` : sizes[0]);
+
+// Google: tells search & Maps this is a bar, with address, phone and hours
+const DAY = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+const ORDER = Object.keys(DAY);
+const to24 = (t) => {
+  const m = String(t).trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = Number(m[1]) % 12;
+  if (m[3].toUpperCase() === 'PM') h += 12;
+  return `${String(h).padStart(2, '0')}:${m[2] || '00'}`;
+};
+const openingHours = st.hours.flatMap((h) => {
+  const keys = h.days.toLowerCase().match(/mon|tue|wed|thu|fri|sat|sun/g) || [];
+  const days = keys.length === 2 && /[–-]/.test(h.days)
+    ? ORDER.slice(ORDER.indexOf(keys[0]), ORDER.indexOf(keys[1]) + 1)
+    : keys;
+  const [open, close] = h.time.split(/[–-]/).map(to24);
+  return open && close && days.length ? [{ '@type': 'OpeningHoursSpecification', dayOfWeek: days.map((d) => DAY[d]), opens: open, closes: close }] : [];
+});
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BarOrPub',
+  name: 'Planet Rose Karaoke Bar',
+  url: canonical,
+  image: new URL('/assets/photos/hero-bar.jpg', Astro.site).href,
+  logo: new URL('/assets/brand/logo-transparent.png', Astro.site).href,
+  telephone: st.phone,
+  email: st.email,
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: st.addressStreet,
+    addressLocality: st.addressCity,
+    addressRegion: st.addressRegion,
+    postalCode: st.addressZip,
+    addressCountry: 'US'
+  },
+  containedInPlace: { '@type': 'Place', name: 'Tropicana Atlantic City' },
+  openingHoursSpecification: openingHours,
+  sameAs: [st.instagramUrl, st.facebookUrl, st.tiktokUrl].filter(Boolean),
+  servesCuisine: 'Cocktails',
+  amenityFeature: [{ '@type': 'LocationFeatureSpecification', name: 'Karaoke', value: true }]
+};
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planet Rose Karaoke Bar · Inside Tropicana Atlantic City</title>
+  <meta name="description" content="Karaoke nightly, $2 songs, cocktails and a private VIP room. Planet Rose Karaoke Bar, inside Tropicana Atlantic City. Opens 9PM.">
+  <meta name="theme-color" content="#141414">
+  <link rel="canonical" href={canonical}>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Planet Rose Karaoke Bar">
+  <meta property="og:title" content="Planet Rose Karaoke Bar · Inside Tropicana Atlantic City">
+  <meta property="og:description" content="Karaoke nightly, $2 songs, cocktails and a private VIP room. Inside Tropicana Atlantic City. Opens 9PM.">
+  <meta property="og:url" content={canonical}>
+  <meta property="og:image" content={new URL('/assets/photos/hero-bar.jpg', Astro.site).href}>
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)}></script>
+  <link rel="icon" href="/assets/brand/logo-transparent.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script is:inline src="/js/mic3d.js" defer></script>
+  <script is:inline src="/js/interactions.js" defer></script>
+  <script is:inline src="/js/shop.js" defer></script>
+  <script is:inline src="/js/forms.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ============ 1. NAV ============ -->
+  <header class="nav" data-nav>
+    <div class="nav__inner">
+      <a class="nav__brand" href="#top" aria-label="Planet Rose Karaoke Bar, back to top">
+        <img src="/assets/brand/logo-transparent.png" alt="" width="48" height="48">
+        <span class="nav__wordmark">Planet Rose<small>Karaoke Bar · AC</small></span>
+      </a>
+
+      <nav class="nav__menu" id="nav-menu" aria-label="Primary">
+        <ul class="nav__links">
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#vip">VIP Room</a></li>
+          <li><a href="#tienda">Shop</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#visit">Visit</a></li>
+        </ul>
+        <a class="btn btn--red nav__cta" href="#plan">Plan Your Night</a>
+      </nav>
+
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu" data-nav-toggle>
+        <span class="nav__toggle-bar" aria-hidden="true"></span>
+        <span class="nav__toggle-bar" aria-hidden="true"></span>
+        <span class="sr-only">Open menu</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ 2. HERO ============ -->
+    <section class="hero" id="top">
+      <div class="hero__panel">
+        <p class="kicker kicker--dot">Karaoke bar · Inside Tropicana AC · Nightly 9PM</p>
+
+        <h1 class="hero__title">
+          <span class="hero__line">Your night.</span>
+          <span class="hero__line">Your song.</span>
+          <span class="hero__line">Your <em class="hero__accent">stage.</em></span>
+        </h1>
+
+        <p class="hero__hook">The mic doesn't care if you can sing. Grab it anyway.</p>
+
+        <div class="mic-widget">
+          <div class="mic-widget__stage">
+            <button class="mic" type="button" data-mic aria-label="Tap the mic to pick a random song" aria-describedby="now-playing">
+              <span class="mic__glow" aria-hidden="true"></span>
+              <span class="mic__ring" aria-hidden="true"></span>
+              <svg class="mic__fallback" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                <g transform="rotate(-18 60 60)">
+                  <path class="mf-handle" d="M47 62 L73 62 L67 108 Q60 113 53 108 Z"/>
+                  <rect class="mf-band" x="45" y="56" width="30" height="7" rx="2"/>
+                  <rect class="mf-collar" x="44" y="50" width="32" height="7" rx="2"/>
+                  <circle class="mf-head" cx="60" cy="32" r="22"/>
+                  <path class="mf-grid" d="M38 32 H82 M40 22 H80 M40 42 H80 M47 14 H73 M47 50 H73 M60 10 V54 M49 12 Q44 32 49 52 M71 12 Q76 32 71 52"/>
+                  <path class="mf-shine" d="M48 20 Q52 14 60 13"/>
+                  <rect class="mf-switch" x="56" y="74" width="8" height="12" rx="2"/>
+                </g>
+              </svg>
+              <canvas class="mic__canvas" data-mic-canvas aria-hidden="true"></canvas>
+            </button>
+            <span class="mic-widget__hint" aria-hidden="true">Tap the mic ↻</span>
+          </div>
+
+          <div class="mic-widget__side">
+            <div class="now-playing" id="now-playing" aria-live="polite">
+              <span class="kicker">Up next · Slip <span data-song-queue>#07</span></span>
+              <strong class="now-playing__title" data-song-title>Don't Stop Believin'</strong>
+              <span class="now-playing__artist" data-song-artist>Journey</span>
+            </div>
+            <div class="hero__ctas">
+              <a class="btn btn--red btn--lg" href="#plan">Plan Your Night</a>
+              <a class="btn btn--ghost btn--lg" href="#menu">See Drinks &amp; Prices</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figure class="hero__media">
+        <img data-parallax="0.06" src="/assets/photos/hero-bar.jpg" alt="The long neon-pink bar at Planet Rose, packed with guests under the black-lettered ceiling" width="1500" height="2000" fetchpriority="high">
+        <figcaption class="hero__tag"><span class="live-dot" aria-hidden="true"></span>Open nightly · Inside Tropicana AC</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ 3. TICKER ============ -->
+    <div class="ticker" role="marquee" aria-label="Karaoke nightly, $2 songs, no dress code, VIP room available, opens 9PM, inside Tropicana AC">
+      <div class="ticker__track" aria-hidden="true">
+        <p class="ticker__group">
+          <span>Karaoke nightly</span><span>$2 songs</span><span>No dress code</span><span>VIP room available</span><span>Opens 9PM</span><span>Inside Tropicana AC</span>
+        </p>
+        <p class="ticker__group">
+          <span>Karaoke nightly</span><span>$2 songs</span><span>No dress code</span><span>VIP room available</span><span>Opens 9PM</span><span>Inside Tropicana AC</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ 3B. QUICK ACCESS ============ -->
+    <section class="quick" aria-label="Quick access">
+      <div class="quick__grid">
+        <a class="quick-card" href="#vip">
+          <span class="quick-card__num">01</span>
+          <span class="quick-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M14 3h5a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-5"/><path d="M4 21V5.2a1 1 0 0 1 .8-1l8-1.6a1 1 0 0 1 1.2 1V21z"/><circle cx="10.5" cy="12.5" r="1.1"/><path d="M2 21h20"/></svg>
+          </span>
+          <span class="quick-card__body">
+            <span class="quick-card__title">VIP Room</span>
+            <span class="quick-card__line">Private room, up to 20 guests</span>
+          </span>
+          <span class="quick-card__go" aria-hidden="true">→</span>
+        </a>
+        <a class="quick-card" href="#menu">
+          <span class="quick-card__num">02</span>
+          <span class="quick-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16l-8 9z"/><path d="M12 13v8"/><path d="M8 21h8"/><path d="M15.5 4 18 1.5"/></svg>
+          </span>
+          <span class="quick-card__body">
+            <span class="quick-card__title">Full Menu</span>
+            <span class="quick-card__line">Cocktails, beer, wine &amp; more</span>
+          </span>
+          <span class="quick-card__go" aria-hidden="true">→</span>
+        </a>
+        <a class="quick-card" href="#tienda">
+          <span class="quick-card__num">03</span>
+          <span class="quick-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M8.5 3 4 5.5 2 10l3.5 1.5V21h13v-9.5L22 10l-2-4.5L15.5 3a3.5 3.5 0 0 1-7 0z"/></svg>
+          </span>
+          <span class="quick-card__body">
+            <span class="quick-card__title">Shop</span>
+            <span class="quick-card__line">Tees, caps &amp; merch</span>
+          </span>
+          <span class="quick-card__go" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============ 4. QUICK INFO ============ -->
+    <section class="section info" aria-labelledby="info-title">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <p class="kicker kicker--dot">The short version</p>
+          <h2 class="section-title" data-parallax="0.035" id="info-title">Know before you go</h2>
+        </header>
+
+        <div class="info__grid">
+          <ul class="stat-grid" role="list">
+            <li class="stat" data-reveal>
+              <span class="stat__label">Karaoke</span>
+              <span class="stat__value">Nightly</span>
+              <span class="stat__note">Seven nights a week</span>
+            </li>
+            <li class="stat" data-reveal>
+              <span class="stat__label">Songs</span>
+              <span class="stat__value price">{st.songPrice}</span>
+              <span class="stat__note">Per song, per slip</span>
+            </li>
+            <li class="stat" data-reveal>
+              <span class="stat__label">Cover</span>
+              <span class="stat__value price">{st.coverRange}</span>
+              <span class="stat__note">{st.coverNote}</span>
+            </li>
+            <li class="stat" data-reveal>
+              <span class="stat__label">Dress code</span>
+              <span class="stat__value">None</span>
+              <span class="stat__note">Come exactly as you are</span>
+            </li>
+          </ul>
+
+          <div class="hours" data-reveal>
+            <table class="hours__table">
+              <caption class="kicker">Hours</caption>
+              <tbody>
+                {st.hours.map((h) => (
+                  <tr class={h.late ? 'is-peak' : undefined}><th scope="row">{h.days}</th><td>{h.time}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <p class="hours__note">{st.hoursNote}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. THE EXPERIENCE ============ -->
+    <section class="section experience" aria-labelledby="exp-title">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <p class="kicker kicker--dot">The experience</p>
+          <h2 class="section-title" data-parallax="0.035" id="exp-title">Three things. <span class="text-red">All night.</span></h2>
+        </header>
+
+        <div class="exp__grid">
+          <article class="exp-card" data-reveal>
+            <figure class="exp-card__media">
+              <img data-parallax="0.08" src="/assets/photos/sing.jpg" alt="A duet singing under the giant lips screen at Planet Rose" width="1050" height="1400" loading="lazy">
+            </figure>
+            <span class="exp-card__num">01</span>
+            <h3 class="exp-card__title">Sing</h3>
+            <p>Solo, duet or the whole table at once. Power ballad or full-volume disaster, the crowd's on your side.</p>
+          </article>
+          <article class="exp-card" data-reveal>
+            <figure class="exp-card__media">
+              <img data-parallax="0.08" src="/assets/photos/drink.jpg" alt="Smiling Planet Rose bartender serving a bright green cocktail on the pink bar" width="978" height="1400" loading="lazy">
+            </figure>
+            <span class="exp-card__num">02</span>
+            <h3 class="exp-card__title">Drink</h3>
+            <p>Loud cocktails, cold beer and a neon-pink bar that runs the length of the room. Liquid courage, served fast.</p>
+          </article>
+          <article class="exp-card" data-reveal>
+            <figure class="exp-card__media">
+              <img data-parallax="0.08" src="/assets/photos/celebrate.jpg" alt="A group celebrating with glow sticks in a booth against the collage wall" width="1050" height="1400" loading="lazy">
+            </figure>
+            <span class="exp-card__num">03</span>
+            <h3 class="exp-card__title">Celebrate</h3>
+            <p>Birthdays, bachelorettes, a Tuesday. Whatever the excuse, bring the people and we'll bring the noise.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. HOW KARAOKE WORKS ============ -->
+    <section class="section how" id="how" aria-labelledby="how-title">
+      <div class="container how__layout">
+        <div class="how__content">
+          <header class="section-head" data-reveal>
+            <p class="kicker kicker--dot">How karaoke works</p>
+            <h2 class="section-title" data-parallax="0.035" id="how-title">From the book<br>to the mic</h2>
+          </header>
+
+          <ol class="steps" role="list">
+            <li class="step" data-reveal>
+              <span class="step__num">01</span>
+              <div><h3 class="step__title">Grab the songbook</h3><p>It's on the bar. Pick a classic, a guilty pleasure, or the one your friends dared you to sing.</p></div>
+            </li>
+            <li class="step" data-reveal>
+              <span class="step__num">02</span>
+              <div><h3 class="step__title">Fill out a slip</h3><p>Song, artist, your name. <span class="price">$2</span> a song.</p></div>
+            </li>
+            <li class="step" data-reveal>
+              <span class="step__num">03</span>
+              <div><h3 class="step__title">Drop it at Songs Sign Up</h3><p>Follow the neon arrow. The host adds you to the rotation.</p></div>
+            </li>
+            <li class="step" data-reveal>
+              <span class="step__num">04</span>
+              <div><h3 class="step__title">Grab a drink, wait for your name</h3><p>Cheer for everyone before you. They'll return the favor.</p></div>
+            </li>
+            <li class="step" data-reveal>
+              <span class="step__num">05</span>
+              <div><h3 class="step__title">Take the stage</h3><p>The mic is yours. The lyrics are on the screen. The room's got you.</p></div>
+            </li>
+          </ol>
+        </div>
+
+        <figure class="how__media" data-reveal>
+          <img data-parallax="0.07" src="/assets/photos/songbook.jpg" alt="A hand filling out a song request slip on the open Planet Rose songbook" width="933" height="1400" loading="lazy">
+          <figcaption class="photo-tag">The book · <span class="price">$2</span> a slip</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ 7. DRINKS & MERCH ============ -->
+    <section class="section menu" id="menu" aria-labelledby="menu-title">
+      <div class="container">
+        <header class="section-head section-head--split" data-reveal>
+          <div>
+            <p class="kicker kicker--dot">Drinks &amp; merch</p>
+            <h2 class="section-title" data-parallax="0.035" id="menu-title">What's pouring</h2>
+          </div>
+          <p class="section-lede">Full menu available at the bar. Prices before tax and tip and may change without notice.</p>
+        </header>
+
+        <ul class="menu__grid" role="list">
+          {c.menu.map((m) => (
+            <li class="menu-card" data-reveal>
+              <figure class="menu-card__media"><img src={m.image.src} alt={m.image.alt} width={m.image.width} height={m.image.height} loading="lazy"></figure>
+              <div class="menu-card__body">
+                <h3 class="menu-card__title">{m.title}</h3>
+                <p class="menu-card__desc">{m.description}</p>
+                {m.priceIsNote
+                  ? <span class="menu-card__price menu-card__price--muted">{m.price}</span>
+                  : <span class="menu-card__price price">{m.price}</span>}
+              </div>
+            </li>
+          ))}
+          <li class="menu-card menu-card--merch" data-reveal>
+            <figure class="menu-card__media menu-card__media--duo">
+              {c.products.slice(0, 2).map((p) => (
+                <img src={p.image.src} alt={p.image.alt} width={p.image.width} height={p.image.height} loading="lazy">
+              ))}
+            </figure>
+            <div class="menu-card__body">
+              <h3 class="menu-card__title">Merchandise</h3>
+              <p class="menu-card__desc">{c.merchCard.description}</p>
+              <span class="menu-card__price price">{c.merchCard.price}</span>
+              <a class="menu-card__link" href="#tienda">Browse the shop <span aria-hidden="true">→</span></a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 7B. SHOP ============ -->
+    <section class="section shop" id="tienda" aria-labelledby="shop-title">
+      <div class="container">
+        <header class="section-head section-head--split" data-reveal>
+          <div>
+            <p class="kicker kicker--dot">Planet Rose shop</p>
+            <h2 class="section-title" id="shop-title" data-parallax="0.035">Take the night home</h2>
+          </div>
+          <p class="section-lede">Tap an item to see it up close and request it. Nothing is charged online: we'll get back to you with availability, sizes and pickup.</p>
+        </header>
+
+        <ul class="shop__grid" role="list">
+          {c.products.map((p) => (
+            <li data-reveal>
+              <button class="product-card" type="button" data-product
+                data-product-id={p.id}
+                data-name={p.name}
+                data-price={p.price}
+                data-img={p.image.src}
+                data-alt={p.image.alt}
+                data-desc={p.description}
+                data-sizes={p.sizes.join(',')}>
+                <span class="product-card__media"><img src={p.image.src} alt="" width={p.image.width} height={p.image.height} loading="lazy"></span>
+                <span class="product-card__body">
+                  <span class="product-card__name">{p.shortName || p.name}</span>
+                  <span class="product-card__meta"><span class="price">{p.price}</span> · {sizeLabel(p.sizes)}</span>
+                </span>
+                <span class="product-card__cta">View details</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 8. VIP ROOM ============ -->
+    <section class="section vip" id="vip" aria-labelledby="vip-title">
+      <div class="container vip__layout">
+        <div class="vip__media" data-reveal>
+          <figure class="vip__main">
+            <img data-parallax="0.06" src={c.vip.mainImage.src} alt={c.vip.mainImage.alt} width={c.vip.mainImage.width} height={c.vip.mainImage.height} loading="lazy">
+            <figcaption class="photo-tag">{c.vip.caption}</figcaption>
+          </figure>
+          <ul class="vip__thumbs" role="list">
+            {c.vip.thumbs.map((t) => (
+              <li><img src={t.src} alt={t.alt} width={t.width} height={t.height} loading="lazy"></li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="vip__content">
+          <header class="section-head" data-reveal>
+            <p class="kicker kicker--dot">Private karaoke</p>
+            <h2 class="section-title" data-parallax="0.035" id="vip-title">The VIP Room</h2>
+          </header>
+          <p class="section-lede" data-reveal>{c.vip.intro}</p>
+
+          <dl class="spec" data-reveal>
+            {c.vip.specs.map((x) => (
+              <div class="spec__item"><dt>{x.label}</dt><dd>{x.price && <><span class="price">{x.price}</span>{' '}</>}{x.value}</dd></div>
+            ))}
+          </dl>
+
+          <div class="btn-row" data-reveal>
+            <a class="btn btn--ghost btn--lg" href={st.calendlyUrl} target="_blank" rel="noopener">Check Availability</a>
+            <a class="btn btn--red btn--lg" href="#plan" data-request-type="vip">Request the VIP Room</a>
+          </div>
+          <p class="fine-print" data-reveal>{c.vip.finePrint}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. GALLERY ============ -->
+    <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
+      <div class="container">
+        <header class="section-head section-head--center" data-reveal>
+          <p class="kicker kicker--dot">Real nights, real people</p>
+          <h2 class="section-title" data-parallax="0.035" id="gallery-title">This is Planet Rose</h2>
+        </header>
+
+        <ul class="tape-wall" role="list">
+          {c.gallery.map((g) => (
+            <li class={g.wide ? 'tape-photo tape-photo--wide' : 'tape-photo'} data-reveal><img src={g.image.src} alt={g.image.alt} width={g.image.width} height={g.image.height} loading="lazy"></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 10. 20+ YEARS ============ -->
+    <section class="years" aria-labelledby="years-title">
+      <div class="container years__inner" data-reveal>
+        <p class="years__num" aria-hidden="true" data-parallax="-0.1">20<span>+</span></p>
+        <div class="years__copy">
+          <h2 class="years__title" id="years-title">20+ years of Atlantic City nights</h2>
+          <p>For over two decades, Planet Rose has been the go-to spot for nights full of fun, no formalities and great energy. Rockstar or shower singer, it doesn't matter. Get on stage, grab a cocktail, and find out why people keep coming back.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. PLAN YOUR NIGHT ============ -->
+    <section class="section plan" id="plan" aria-labelledby="plan-title">
+      <div class="container plan__layout">
+        <div class="plan__intro">
+          <header class="section-head" data-reveal>
+            <p class="kicker kicker--dot">Groups · Birthdays · VIP</p>
+            <h2 class="section-title" data-parallax="0.035" id="plan-title">Plan your night</h2>
+          </header>
+          <p class="section-lede" data-reveal>Tell us what you have in mind. This is a request, not a booking. Someone from our team will get back to you to confirm availability and the details.</p>
+
+          {/* Placeholder: no photos of the tables/seating yet. Replace with a real photo only. */}
+          <figure class="placeholder placeholder--short" data-reveal>
+            <svg class="placeholder__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18"/><path d="M5 9v11M19 9v11"/><path d="M8 9V6h8v3"/><path d="M5 15h14"/></svg>
+            <figcaption>
+              <span class="placeholder__title">Tables &amp; booths</span>
+              <span class="kicker">Photo coming soon</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <form class="form" name="plan-your-night" method="POST" data-netlify="true" netlify-honeypot="bot-field" data-request-form data-success="Thanks! We received your request. A member of our team will contact you to confirm." novalidate>
+          <input type="hidden" name="form-name" value="plan-your-night">
+          <p class="sr-only" aria-hidden="true"><label>Leave this empty <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+          <div class="form__grid">
+            <div class="field">
+              <label for="f-name">Name <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-name" name="name" type="text" autocomplete="name" required>
+              <p class="field__error" id="f-name-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-email">Email <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required>
+              <p class="field__error" id="f-email-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-phone">Phone</label>
+              <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel">
+              <p class="field__error" id="f-phone-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-type">Request type <span class="req" aria-hidden="true">*</span></label>
+              <select id="f-type" name="type" required>
+                <option value="">Choose one…</option>
+                <option value="vip">VIP Room</option>
+                <option value="table">Table for a group</option>
+                <option value="birthday">Birthday</option>
+                <option value="bachelorette">Bachelorette / Bachelor</option>
+                <option value="corporate">Work / corporate event</option>
+                <option value="other">Something else</option>
+              </select>
+              <p class="field__error" id="f-type-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-date">Date <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-date" name="date" type="date" required>
+              <p class="field__error" id="f-date-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-time">Arrival time</label>
+              <select id="f-time" name="time">
+                <option value="">Any time</option>
+                <option>9:00 PM</option><option>9:30 PM</option><option>10:00 PM</option><option>10:30 PM</option>
+                <option>11:00 PM</option><option>11:30 PM</option><option>12:00 AM</option><option>12:30 AM</option><option>1:00 AM</option>
+              </select>
+              <p class="field__error" id="f-time-err"></p>
+            </div>
+            <div class="field">
+              <label for="f-size">Party size <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-size" name="size" type="number" min="1" max="60" inputmode="numeric" required>
+              <p class="field__error" id="f-size-err"></p>
+            </div>
+            <div class="field field--full">
+              <label for="f-notes">Notes</label>
+              <textarea id="f-notes" name="notes" rows="4" placeholder="Occasion, song requests, anything we should know"></textarea>
+            </div>
+          </div>
+          <div class="form__foot">
+            <button class="btn btn--red btn--lg" type="submit">Send Request</button>
+            <p class="fine-print">Sending this form doesn't reserve anything. We'll contact you to confirm.</p>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ 12. LOCATION ============ -->
+    <section class="section location" id="visit" aria-labelledby="visit-title">
+      <div class="container location__layout">
+        <div class="location__info" data-reveal>
+          <p class="kicker kicker--dot">Visit</p>
+          <h2 class="section-title" data-parallax="0.035" id="visit-title">Find the pink light</h2>
+          <address class="location__address">
+            <strong>Planet Rose Karaoke Bar</strong>
+            {st.addressVenue}<br>
+            {st.addressStreet}<br>
+            {st.addressCity}, {st.addressRegion} {st.addressZip}
+          </address>
+          <p class="location__tip">Inside Tropicana Atlantic City. Look for the red Planet Rose neon and follow the singing.</p>
+          <div class="btn-row">
+            <a class="btn btn--red btn--lg" href={st.mapsUrl} target="_blank" rel="noopener">Get Directions</a>
+            <a class="btn btn--ghost btn--lg" href={tel}>Call the Bar</a>
+          </div>
+        </div>
+
+        {/* Placeholder: swap for a Google Maps embed later */}
+        <div class="map-placeholder" role="img" aria-label="Map placeholder: Planet Rose inside Tropicana, Atlantic City" data-reveal>
+          <span class="map-placeholder__pin" aria-hidden="true"></span>
+          <span class="map-placeholder__label kicker">Tropicana · Atlantic City</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13. FINAL CTA ============ -->
+    <section class="final-cta" aria-labelledby="final-title">
+      <img class="final-cta__bg" data-parallax="0.06" src="/assets/photos/crowd.jpg" alt="" width="2000" height="1500" loading="lazy">
+      <div class="container final-cta__inner" data-reveal>
+        <p class="kicker kicker--dot">Doors at 9PM</p>
+        <h2 class="final-cta__title" id="final-title">Ready for <span class="text-red">your song?</span></h2>
+        <div class="btn-row btn-row--center">
+          <a class="btn btn--red btn--lg" href="#plan">Plan Your Night</a>
+          <a class="btn btn--ghost btn--lg" href={st.instagramUrl} target="_blank" rel="noopener">Follow on Instagram</a>
+          <a class="btn btn--ghost btn--lg" href={tel}>Call Us</a>
+        </div>
+        <ul class="social" role="list" aria-label="Social links">
+          <li><a href={st.instagramUrl} target="_blank" rel="noopener">Instagram {st.instagramHandle}</a></li>
+          <li><a href={st.facebookUrl} target="_blank" rel="noopener">Facebook</a></li>
+          <li><a href={mailto}>Email</a></li>
+          {st.tiktokUrl && <li><a href={st.tiktokUrl} target="_blank" rel="noopener">TikTok</a></li>}
+          {st.googleReviewUrl && <li><a href={st.googleReviewUrl} target="_blank" rel="noopener">Leave us a Google review</a></li>}
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 14. FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a class="footer__brand" href="#top">
+        <img src="/assets/brand/logo-transparent.png" alt="Planet Rose, Tokyo · NYC · Atlantic City" width="88" height="88" loading="lazy">
+      </a>
+      <div class="footer__cols">
+        <div>
+          <p class="kicker">Contact</p>
+          <a href={mailto}>{st.email}</a>
+          <a href={tel}>{st.phoneDisplay}</a>
+        </div>
+        <div>
+          <p class="kicker">Find us</p>
+          <p>Inside Tropicana<br>Atlantic City, NJ</p>
+        </div>
+        <div>
+          <p class="kicker">Open</p>
+          <p>Nightly from 9PM</p>
+        </div>
+        <div>
+          <p class="kicker">Follow</p>
+          <a href={st.instagramUrl} target="_blank" rel="noopener">Instagram</a>
+          <a href={st.facebookUrl} target="_blank" rel="noopener">Facebook</a>
+          {st.googleReviewUrl && <a href={st.googleReviewUrl} target="_blank" rel="noopener">Review us on Google</a>}
+        </div>
+      </div>
+    </div>
+    <div class="container footer__base">
+      <p>© <span data-year>{new Date().getFullYear()}</span> Planet Rose Karaoke Bar. All rights reserved.</p>
+      <p>Please drink responsibly. 21+.</p>
+    </div>
+  </footer>
+
+  <!-- ============ VERTICAL "PLAN YOUR NIGHT" RIBBON ============ -->
+  <a class="ribbon" href="#plan">Plan your night</a>
+
+  <!-- ============ PRODUCT DETAIL + REQUEST (shop) ============ -->
+  <dialog class="product-dialog" data-product-dialog aria-labelledby="pd-name">
+    <button class="product-dialog__close" type="button" data-dialog-close aria-label="Close">×</button>
+    <div class="product-dialog__grid">
+      <figure class="product-dialog__media"><img src="" alt="" data-pd-img></figure>
+
+      <div class="product-dialog__info">
+        <!-- Step 1: detail -->
+        <div data-pd-detail>
+          <p class="kicker kicker--dot">Planet Rose shop</p>
+          <h2 class="product-dialog__name" id="pd-name" data-pd-name>Product</h2>
+          <p class="product-dialog__price price" data-pd-price>$30</p>
+          <p class="product-dialog__desc" data-pd-desc></p>
+          <p class="kicker product-dialog__sizes-label">Sizes</p>
+          <ul class="size-chips" role="list" data-pd-sizes></ul>
+          <button class="btn btn--red btn--lg product-dialog__request" type="button" data-pd-request>Request to Order</button>
+          <p class="fine-print">This is not a purchase. Nothing is charged online.</p>
+        </div>
+
+        <!-- Step 2: request form -->
+        <form class="form form--dialog" name="shop-request" method="POST" data-netlify="true" netlify-honeypot="bot-field" data-request-form data-success="Thanks! We received your request. Nothing has been charged: we'll contact you separately with availability, total and pickup details." data-pd-form hidden novalidate>
+          <input type="hidden" name="form-name" value="shop-request">
+          <p class="sr-only" aria-hidden="true"><label>Leave this empty <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+
+          <p class="kicker kicker--dot">Request to order</p>
+          <p class="form__note">This is a request, not a purchase. <strong>Nothing is charged.</strong> We'll reach out separately with availability, the total and how to pick it up.</p>
+
+          <div class="form__grid">
+            <div class="field">
+              <label for="s-product">Product <span class="req" aria-hidden="true">*</span></label>
+              <select id="s-product" name="product" required>
+                <option value="">Choose one…</option>
+                {c.products.map((p) => <option value={p.name}>{p.shortName || p.name} ({p.price})</option>)}
+              </select>
+              <p class="field__error" id="s-product-err"></p>
+            </div>
+            <div class="field">
+              <label for="s-size">Size <span class="req" aria-hidden="true">*</span></label>
+              <select id="s-size" name="size" required>
+                <option value="">Choose…</option>
+                {allSizes.map((z) => <option>{z}</option>)}
+              </select>
+              <p class="field__error" id="s-size-err"></p>
+            </div>
+            <div class="field">
+              <label for="s-name">Name <span class="req" aria-hidden="true">*</span></label>
+              <input id="s-name" name="name" type="text" autocomplete="name" required>
+              <p class="field__error" id="s-name-err"></p>
+            </div>
+            <div class="field">
+              <label for="s-qty">Quantity <span class="req" aria-hidden="true">*</span></label>
+              <input id="s-qty" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric" required>
+              <p class="field__error" id="s-qty-err"></p>
+            </div>
+            <div class="field">
+              <label for="s-email">Email <span class="req" aria-hidden="true">*</span></label>
+              <input id="s-email" name="email" type="email" autocomplete="email" required>
+              <p class="field__error" id="s-email-err"></p>
+            </div>
+            <div class="field">
+              <label for="s-phone">Phone <span class="req" aria-hidden="true">*</span></label>
+              <input id="s-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required>
+              <p class="field__error" id="s-phone-err"></p>
+            </div>
+            <div class="field field--full">
+              <label for="s-notes">Notes</label>
+              <textarea id="s-notes" name="notes" rows="3" placeholder="Anything else we should know"></textarea>
+            </div>
+          </div>
+          <div class="form__foot">
+            <button class="btn btn--red btn--lg" type="submit">Send Request</button>
+            <button class="btn btn--ghost" type="button" data-pd-back>Back</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" role="status" aria-live="polite" data-toast>
+    <span class="toast__icon" aria-hidden="true">✓</span>
+    <p class="toast__msg" data-toast-msg></p>
+  </div>
+</body>
+</html>
