@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 
-// SITE_URL is set in Netlify once the domain is ready (e.g. https://planetroseac.com).
+// Official address of the site (used by Google, the sitemap and share previews).
 export default defineConfig({
-  site: process.env.SITE_URL || 'https://planetrose.netlify.app',
+  site: process.env.SITE_URL || 'https://planetroseac.com',
   output: 'static',
   build: { inlineStylesheets: 'never' }
 });
