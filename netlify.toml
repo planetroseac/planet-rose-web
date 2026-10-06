@@ -10,3 +10,21 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Basic hardening for every page
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(self \"https://js.stripe.com\")"
+
+# Booking pages: only our files, Stripe (card field), Cloudflare (bot check)
+# and the reservation engine on Google Apps Script may run or be contacted.
+[[headers]]
+  for = "/reserve/*"
+  [headers.values]
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://js.stripe.com https://*.js.stripe.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.stripe.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://api.stripe.com https://challenges.cloudflare.com; frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
