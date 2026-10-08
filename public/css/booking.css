@@ -365,7 +365,15 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .bk-cardbox__title .req { color: var(--brand-red); }
 .bk-cardbox__note { margin: 4px 0 16px; font-size: .88rem; color: var(--muted); }
 .bk-cardbox__note strong { color: var(--brand-white); }
-.bk-cardbox__element { min-height: 110px; }
+.bk-cardbox__element {
+  padding: 15px 14px;
+  background: var(--brand-black);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.bk-cardbox__element.StripeElement--focus { border-color: var(--brand-white); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-white) 14%, transparent); }
+.bk-cardbox__element.StripeElement--invalid { border-color: var(--brand-red); }
 .bk-cardbox__secure {
   display: flex;
   align-items: center;

@@ -39,7 +39,7 @@
   var byDate = {};
   var sel = { hours: 1, night: null, start: null };
   var view = { y: 0, m: 0 };   // month shown in the calendar
-  var stripe = null, elements = null, turnstileId = null;
+  var stripe = null, elements = null, card = null, turnstileId = null;
   var busy = false;
 
   /* -------------------------------------------------------------- labels */
@@ -291,22 +291,16 @@
     if (cfg.cardRequired) {
       loadScript('https://js.stripe.com/v3/').then(function () {
         stripe = window.Stripe(cfg.stripeKey);
-        elements = stripe.elements({
-          mode: 'setup',
-          currency: 'usd',
-          paymentMethodTypes: ['card'],
-          fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&display=swap' }],
-          appearance: {
-            theme: 'night',
-            variables: {
-              colorPrimary: '#F8001C', colorBackground: '#141414', colorText: '#F3F3F3',
-              colorDanger: '#ff5a6a', fontFamily: 'Archivo, system-ui, sans-serif', borderRadius: '2px', spacingUnit: '4px'
-            },
-            rules: { '.Input': { border: '1.5px solid rgba(243,243,243,.26)' }, '.Label': { fontSize: '13px', fontWeight: '600' } }
+        // Classic Card Element: one field (number, expiry, CVC, ZIP), cards only
+        elements = stripe.elements({ fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&display=swap' }] });
+        card = elements.create('card', {
+          style: {
+            base: { color: '#F3F3F3', iconColor: '#F3F3F3', fontFamily: 'Archivo, system-ui, sans-serif', fontSize: '16px', '::placeholder': { color: 'rgba(243,243,243,.4)' } },
+            invalid: { color: '#ff5a6a', iconColor: '#ff5a6a' }
           }
         });
-        elements.create('payment', { layout: 'tabs', wallets: { applePay: 'never', googlePay: 'never' } })
-          .mount($('[data-card-element]'));
+        card.mount($('[data-card-element]'));
+        card.on('change', function (e) { $('[data-card-error]').textContent = e.error ? e.error.message : ''; });
       }).catch(function () {
         $('[data-card-error]').textContent = 'The secure card form couldn\'t load. Please refresh the page' + (phone ? ' or call us at ' + phone + '.' : '.');
       });
@@ -430,26 +424,18 @@
       return;
     }
 
-    if (!stripe || !elements) { formError('The secure card form is still loading. Please wait a moment.'); return; }
+    if (!stripe || !card) { formError('The secure card form is still loading. Please wait a moment.'); return; }
     setBusy(true, 'Checking card…');
     var cardErr = $('[data-card-error]');
     cardErr.textContent = '';
+    d.action = 'intent';
 
-    elements.submit().then(function (r) {
-      if (r.error) { cardErr.textContent = r.error.message; throw { handled: true }; }
-      d.action = 'intent';
-      return api('POST', d);
-    }).then(function (res) {
+    api('POST', d).then(function (res) {
       if (!res.ok) { fail(res); throw { handled: true }; }
       setBusy(true, 'Securing your card…');
-      return stripe.confirmSetup({
-        elements: elements,
-        clientSecret: res.clientSecret,
-        redirect: 'if_required',
-        confirmParams: {
-          return_url: window.location.origin + window.location.pathname,
-          payment_method_data: { billing_details: { name: d.name, email: d.email, phone: d.phone } }
-        }
+      // Card number goes from this field straight to Stripe; a bank check (3D Secure) opens in a popup
+      return stripe.confirmCardSetup(res.clientSecret, {
+        payment_method: { card: card, billing_details: { name: d.name, email: d.email, phone: d.phone } }
       });
     }).then(function (r) {
       if (r.error) { cardErr.textContent = r.error.message; throw { handled: true }; }
