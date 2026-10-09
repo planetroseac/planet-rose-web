@@ -499,6 +499,9 @@
     $$('[data-phone-text]').forEach(function (el) { el.textContent = phone || 'us'; });
     F('guests').max = cfg.rules.maxGuests;
     $('[data-test-banner]').hidden = !cfg.testMode;
+    // Without the card guarantee, hide every mention of the card and the fee
+    $$('[data-card-only]').forEach(function (el) { el.hidden = !cfg.cardRequired; });
+    $$('[data-nocard-only]').forEach(function (el) { el.hidden = cfg.cardRequired; });
     $$('[data-duration]').forEach(function (b) { b.hidden = Number(b.getAttribute('data-duration')) > cfg.rules.maxHours; });
 
     // Open on the month of the first night with a free time

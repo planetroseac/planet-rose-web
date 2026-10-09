@@ -1,5 +1,5 @@
 // Sitemap for Google Search Console. Add new pages here as the site grows.
-const PAGES = ['/'];
+const PAGES = ['/', '/reserve/vip/'];
 
 export function GET({ site }) {
   const today = new Date().toISOString().slice(0, 10);

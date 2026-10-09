@@ -21,7 +21,6 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reserve the VIP Room · Planet Rose Karaoke Bar</title>
   <meta name="description" content="Book the private VIP karaoke room at Planet Rose, inside Tropicana Atlantic City. Pick your night, your time and how many hours.">
-  <meta name="robots" content="noindex">
   <meta name="theme-color" content="#141414">
   <link rel="canonical" href={canonical}>
   <link rel="icon" href="/assets/brand/logo-transparent.png">
@@ -146,9 +145,9 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
               </div>
               <p class="bk-cal__hint">Each date is <strong>that night</strong>, from 9 PM. Times after midnight stay on the night you pick.</p>
               <ul class="bk-know" role="list" aria-label="Good to know">
-                <li>💳 Card required</li>
+                <li data-card-only>💳 Card required</li>
                 <li>⏱ 30-min grace period</li>
-                <li>⚠️ Cancel 3+ hrs ahead or <span data-fee>$50</span> fee</li>
+                <li>⚠️ Cancel 3+ hrs ahead<span data-card-only> or <span data-fee>$50</span> fee</span></li>
                 <li>🪪 21+ with ID</li>
               </ul>
             </div>
@@ -217,18 +216,18 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
           <section class="bk-rules" aria-labelledby="rules-title">
             <h3 class="bk-rules__title" id="rules-title">Before you confirm</h3>
             <ol class="bk-rules__list">
-              <li><strong>Be on time.</strong> We hold the room for <span data-grace>30</span> minutes. After that the reservation is cancelled and the no-show fee applies.</li>
-              <li><strong>Cancel at least <span data-notice>3</span> hours before.</strong> Call <span data-phone-text></span> to cancel or change. No-shows and later cancellations are charged <span data-fee>$50</span> to the card on file.</li>
+              <li><strong>Be on time.</strong> We hold the room for <span data-grace>30</span> minutes. After that the reservation is cancelled<span data-card-only> and the no-show fee applies</span>.</li>
+              <li><strong>Cancel at least <span data-notice>3</span> hours before.</strong> Call <span data-phone-text></span> to cancel or change<span data-nocard-only>, so we can offer the room to another group</span>.<span data-card-only> No-shows and later cancellations are charged <span data-fee>$50</span> to the card on file.</span></li>
               <li><strong>Your time ends on time.</strong> The room is yours for the hours you book. Want to stay longer? Ask your server; we'll extend it if the next slot is free.</li>
               <li><strong>Up to <span data-max-guests>20</span> guests, all 21+</strong> with a valid ID at the door.</li>
-              <li><strong>Room fee is paid at the bar</strong> on the night: $10 per person per hour ($50 minimum per hour) plus 20% gratuity added to the bill. Nothing is charged today.</li>
+              <li><strong>Room fee is paid at the bar</strong> on the night: $10 per person per hour ($50 minimum per hour) plus 20% gratuity added to the bill.<span data-card-only> Nothing is charged today.</span></li>
               <li><strong>After midnight = same night.</strong> A Friday 12:00 AM booking is Friday night, in the early hours of Saturday.</li>
             </ol>
           </section>
 
           <label class="bk-check">
             <input type="checkbox" name="policy" required>
-            <span>I have read and agree to the reservation rules above, including the <span data-fee>$50</span> no-show / late cancellation fee.</span>
+            <span>I have read and agree to the reservation rules above<span data-card-only>, including the <span data-fee>$50</span> no-show / late cancellation fee</span>.</span>
           </label>
           <p class="field__error" id="b-policy-err"></p>
 
