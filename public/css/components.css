@@ -1097,3 +1097,15 @@
   .product-card { grid-template-columns: auto 1fr; padding-right: 14px; }
   .product-card__cta { grid-column: 1 / -1; justify-content: space-between; }
 }
+
+/* VIP: low-key third option next to the booking buttons */
+.vip__request {
+  align-self: center;
+  padding: 8px 4px;
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.vip__request:hover { color: var(--brand-white); }
