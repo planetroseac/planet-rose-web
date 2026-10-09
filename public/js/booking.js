@@ -15,6 +15,8 @@
 
   // Apps Script web app of the reservation engine (/reservas-engine)
   var ENGINE_URL = 'https://script.google.com/macros/s/AKfycbw7M9RV8-h3zKa19wny0opeJgu5JLhTr2JwaSw0uL3T09s6vLsL88tbzPmkg9cOfOfX/exec';
+  // Website forms script (Google Sheet + team email): large groups go here instead of booking
+  var FORMS_URL = 'https://script.google.com/macros/s/AKfycbwsjJmX3psrr5Ccm3322vlN9TphllJ9TBTohEMuev38xc1LsZWvbxgJodVfeE5J63PtxQ/exec';
 
   var root = document.querySelector('[data-booking]');
   if (!root) return;
@@ -266,6 +268,7 @@
     screen('details');
     mountExtras();
     updatePrice();
+    setGroupMode();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(function () { F('first').focus({ preventScroll: true }); }, 50);
   }
@@ -321,7 +324,7 @@
     phone: function (v) { return v.replace(/\D/g, '').length >= 10 ? '' : 'Please enter a full phone number.'; },
     guests: function (v) {
       var n = Number(v);
-      return v && Number.isInteger(n) && n >= 1 && n <= cfg.rules.maxGuests ? '' : 'Enter 1 to ' + cfg.rules.maxGuests + ' guests.';
+      return v && Number.isInteger(n) && n >= 1 && n <= 500 ? '' : 'How many guests are coming?';
     }
   };
   function check(name) {
@@ -339,7 +342,7 @@
     input.addEventListener('blur', function () { if (input.value) check(name); });
     input.addEventListener('input', function () {
       if (input.getAttribute('aria-invalid') === 'true') check(name);
-      if (name === 'guests') updatePrice();
+      if (name === 'guests') { updatePrice(); setGroupMode(); }
     });
   });
 
@@ -359,12 +362,49 @@
       ', plus ' + cfg.rules.gratuity + '% gratuity. Paid at the bar.'));
   }
 
+  /* ------------------------------------------------------- large groups */
+  // More than maxGuests can't book online: same form, sent as a request to the team
+  function isGroup() {
+    return !!cfg && guests() > cfg.rules.maxGuests;
+  }
+  function guests() {
+    var n = Number(F('guests').value);
+    return Number.isInteger(n) ? n : 0;
+  }
+  function setGroupMode() {
+    if (!cfg) return;
+    var g = isGroup();
+    $('[data-group-note]').hidden = !g;
+    $$('[data-solo]').forEach(function (el) { el.hidden = g; });
+    $('[data-card-box]').hidden = g || !cfg.cardRequired;
+    if (!busy) setBusy(false);
+  }
+
+  function sendGroup(d) {
+    setBusy(true, 'Sending…');
+    var body = new URLSearchParams({
+      'form-name': 'plan-your-night', type: 'group', date: d.night,
+      time: timeLabel(d.start) + (d.start >= 24 ? ' (' + afterMidnight(d.night) + ')' : '') + ', ' + hoursLabel(d.hours),
+      size: String(d.guests), name: d.name, phone: d.phone, email: d.email,
+      notes: 'VIP Room request from the booking page (' + nightName(d.night) + ').' + (d.notes ? ' ' + d.notes : '')
+    });
+    // Apps Script sends no CORS headers: the reply is opaque, a network error still lands in catch
+    fetch(FORMS_URL, { method: 'POST', mode: 'no-cors', body: body }).then(function () {
+      setBusy(false);
+      $('[data-sent-name]').textContent = F('first').value.trim();
+      $('[data-sent-email]').textContent = d.email;
+      screen('sent');
+      $('[data-screen="sent"]').focus();
+      window.scrollTo(0, 0);
+    }).catch(function () { fail(null); });
+  }
+
   /* ------------------------------------------------------------ submit */
   function setBusy(on, label) {
     busy = on;
     var b = $('[data-submit]');
     b.disabled = on;
-    b.textContent = on ? (label || 'Working…') : 'Confirm reservation';
+    b.textContent = on ? (label || 'Working…') : isGroup() ? 'Send group request' : 'Confirm reservation';
   }
   function formError(text) {
     $('[data-form-error]').textContent = text || '';
@@ -411,11 +451,13 @@
       if (!check(name)) { ok = false; first = first || F(name); }
     });
     var policyErr = document.getElementById('b-policy-err');
-    policyErr.textContent = F('policy').checked ? '' : 'Please accept the reservation policy.';
-    if (!F('policy').checked) { ok = false; first = first || F('policy'); }
+    var needPolicy = !isGroup();
+    policyErr.textContent = !needPolicy || F('policy').checked ? '' : 'Please accept the reservation policy.';
+    if (needPolicy && !F('policy').checked) { ok = false; first = first || F('policy'); }
     if (!ok) { first.focus(); return; }
 
     var d = details();
+    if (isGroup()) { sendGroup(d); return; }
 
     if (!cfg.cardRequired) {
       setBusy(true, 'Booking…');

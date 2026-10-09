@@ -189,7 +189,7 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
             </div>
             <div class="field">
               <label for="b-guests">Amount of guests <span class="req" aria-hidden="true">*</span></label>
-              <input id="b-guests" name="guests" type="number" min="1" max="20" inputmode="numeric" required>
+              <input id="b-guests" name="guests" type="number" min="1" max="500" inputmode="numeric" required>
               <p class="field__error" id="b-guests-err"></p>
             </div>
             <div class="field field--full">
@@ -213,7 +213,12 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
             </p>
           </div>
 
-          <section class="bk-rules" aria-labelledby="rules-title">
+          <div class="bk-group" data-group-note hidden>
+            <p class="bk-group__title">Planning for more than <span data-max-guests>20</span> guests?</p>
+            <p>Groups this size need a custom plan, so we don't book them online. Send your request and <strong>one of our agents will contact you</strong> to set it up. Nothing is reserved yet.</p>
+          </div>
+
+          <section class="bk-rules" data-solo aria-labelledby="rules-title">
             <h3 class="bk-rules__title" id="rules-title">Before you confirm</h3>
             <ol class="bk-rules__list">
               <li><strong>Be on time.</strong> We hold the room for <span data-grace>30</span> minutes. After that the reservation is cancelled<span data-card-only> and the no-show fee applies</span>.</li>
@@ -225,7 +230,7 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
             </ol>
           </section>
 
-          <label class="bk-check">
+          <label class="bk-check" data-solo>
             <input type="checkbox" name="policy" required>
             <span>I have read and agree to the reservation rules above<span data-card-only>, including the <span data-fee>$50</span> no-show / late cancellation fee</span>.</span>
           </label>
@@ -242,6 +247,14 @@ const canonical = new URL('/reserve/vip/', Astro.site).href;
           <h2 class="bk-main__title" id="done-title">You're booked!</h2>
           <dl class="bk-done__list" data-done-list></dl>
           <p class="bk-done__text">We sent the details to <strong data-done-email></strong>. Need to change or cancel? Call us at <a href={tel}>{st.phoneDisplay}</a> at least 3 hours before your start time.</p>
+          <a class="btn btn--red btn--lg" href="/">Back to Planet Rose</a>
+        </section>
+
+        <!-- Screen 4: large-group request sent -->
+        <section class="bk-screen bk-done" data-screen="sent" hidden tabindex="-1" aria-labelledby="sent-title">
+          <div class="bk-done__icon" aria-hidden="true">✓</div>
+          <h2 class="bk-main__title" id="sent-title">Request received!</h2>
+          <p class="bk-done__text">Thanks, <strong data-sent-name></strong>. One of our agents will contact you at <strong data-sent-email></strong> or by phone to plan your group. Questions now? Call <a href={tel}>{st.phoneDisplay}</a>.</p>
           <a class="btn btn--red btn--lg" href="/">Back to Planet Rose</a>
         </section>
       </div>
