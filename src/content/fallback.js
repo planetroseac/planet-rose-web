@@ -76,9 +76,9 @@ export default {
       { label: 'Minimum', value: 'for 5 or fewer', price: '$50' },
       { label: 'Length', value: '1 – 3 hours', price: '' },
       { label: 'Gratuity', value: '20% added', price: '' },
-      { label: 'To hold it', value: 'Card required', price: '' }
+      { label: 'Booking', value: 'Instant online', price: '' }
     ],
-    finePrint: "Reservations aren't confirmed until approved by the Planet Rose team. A $50 fee applies to late cancellations and no-shows."
+    finePrint: "Book online and you're confirmed instantly. Please cancel at least 3 hours before your reservation."
   },
 
   gallery: [
