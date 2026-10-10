@@ -37,6 +37,13 @@
   }
 
   /* ---------------- smooth in-page anchors ---------------- */
+  // Links from other pages (e.g. /?type=table#plan) pre-select the request type too
+  var typeParam = new URLSearchParams(window.location.search).get('type');
+  if (typeParam) {
+    var typeSelect = document.getElementById('f-type');
+    if (typeSelect && typeSelect.querySelector('option[value="' + typeParam.replace(/[^a-z]/g, '') + '"]')) typeSelect.value = typeParam;
+  }
+
   document.addEventListener('click', function (e) {
     var link = e.target.closest('a[href^="#"]');
     if (!link) return;
