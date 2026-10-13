@@ -76,9 +76,9 @@ export default {
       { label: 'Minimum', value: 'for 5 or fewer', price: '$50' },
       { label: 'Length', value: '1 – 3 hours', price: '' },
       { label: 'Gratuity', value: '20% added', price: '' },
-      { label: 'Booking', value: 'Instant online', price: '' }
+      { label: 'To hold it', value: 'Card required', price: '' }
     ],
-    finePrint: "Book online and you're confirmed instantly. Please cancel at least 3 hours before your reservation."
+    finePrint: "Book online and you're confirmed instantly. A card holds your reservation; a $50 fee applies to no-shows and cancellations less than 3 hours before."
   },
 
   gallery: [
