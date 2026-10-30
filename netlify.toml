@@ -5,6 +5,13 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Printed QR codes in the bar point here, so the destination can change without reprinting
+[[redirects]]
+  from = "/review"
+  to = "https://g.page/r/CbEiK4GhuaTOEAI/review"
+  status = 302
+  force = true
+
 # Long cache for photos, CSS and JS; HTML always fresh
 [[headers]]
   for = "/assets/*"
